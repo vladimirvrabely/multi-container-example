@@ -25,7 +25,7 @@ services:
       - example-infra_default-network
     ports:
       - "3000:3000"
-  
+
   loki:
     container_name: loki
     image: grafana/loki
@@ -37,7 +37,7 @@ services:
       - example-infra_default-network
     ports:
       - "3100:3100"
-  
+
   promtail:
     container_name: promtail
     image: grafana/promtail
