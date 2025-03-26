@@ -1,0 +1,19 @@
+*.env
+*.rdb
+volumes/postgresql/
+volumes/loki/
+volumes/kafka/kraft-combined-logs/
+
+# Python
+uv.lock
+__pycache__
+
+
+# Rust
+/target
+/target-local
+Cargo.lock
+
+# IDE
+.idea
+

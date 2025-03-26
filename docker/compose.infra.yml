@@ -1,0 +1,75 @@
+name: example-infra
+
+networks:
+  default-network:
+
+services:
+  valkey:
+    container_name: valkey
+    image: valkey/valkey
+    command: 'valkey-server --notify-keyspace-events KEA'
+    networks:
+      - default-network
+    ports:
+      - "6379:6379"
+  
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_URL=${POSTGRES_URL}
+    # For after-startup scripts 
+    volumes:
+      - ${PWD}/volumes/postgresql/data:/var/lib/postgresql
+      - ${PWD}/volumes/postgresql/scripts:/scripts
+    networks:
+      - default-network
+    ports:
+      - "5432:5432"
+
+  # See https://docs.confluent.io/platform/current/installation/docker/config-reference.html#confluent-ak-configuration
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka
+    user: 0:0
+    environment:
+      - CLUSTER_ID=4L6g3nShT-eMCtK--X86sw
+      - KAFKA_NODE_ID=1
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_LISTENERS=PLAINTEXT://kafka:29092,CONTROLLER://localhost:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:29093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LOG_DIRS=/tmp/kraft-combined-logs
+      - KAFKA_REST_HOST_NAME=rest-proxy
+      - KAFKA_REST_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_REST_LISTENERS=http://0.0.0.0:8082
+      - KAFKA_JMX_PORT=9101
+      - KAFKA_JMX_HOSTNAME=localhost
+      # See https://jdriven.com/blog/2021/10/Production-ready-Kafka-Connect
+    #   - KAFKA_OPTS=-javaagent:/opt/jmx_prometheus_javaagent-1.1.0.jar=9102:/opt/kafka-connect.yml
+      - KAFKA_LOG_RETENTION_HOURS=1
+      - KAFKA_LOG_RETENTION_BYTES=52428800
+    volumes:
+      - ${PWD}/volumes/kafka/kraft-combined-logs:/tmp/kraft-combined-logs:rw
+    networks:
+      - default-network
+    ports:
+      - "9092:9092"
+
+  # Build locally using instructions in https://github.com/bytebeamio/rumqtt/blob/main/build_rumqttd_docker.sh
+  mqtt:
+    container_name: mqtt
+    image: bytebeamio/rumqttd
+    networks:
+      - default-network
+    ports:
+      - "1883:1883"
+      - "1884:1884"

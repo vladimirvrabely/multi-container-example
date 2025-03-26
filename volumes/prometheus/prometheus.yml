@@ -1,0 +1,22 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # See https://opentelemetry.io/docs/collector/configuration/#exporters
+  - job_name: otel
+    static_configs:
+      - targets: ['opentelemetry-collector:8889']
+
+  - job_name: postgresql
+    static_configs:
+      - targets: ['postgresql-exporter:9187']
+
+  - job_name: cadvisor
+    static_configs:
+    - targets: ['cadvisor:8080']
+
